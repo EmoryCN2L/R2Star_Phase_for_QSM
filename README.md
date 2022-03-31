@@ -19,8 +19,8 @@ A nonlinear approximate message passing (AMP) framework is proposed to recover R
     ./AMP_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the AMP-PE approach.
     ./L1_MRI_T2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the l1-norm regularization (L1) approach.
     ./L1_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the l1-norm regularization (L1) approach.
-    ./data						-- The data folder
-    ./result					-- The result folder
+    ./data				-- The data folder
+    ./result				-- The result folder
 ```
 
 ## Dataset Preparation
@@ -48,7 +48,9 @@ The datasets need to be placed in the data folder. We first define the following
 ```
 
 ## Usage
-You can follow the following steps to run the program. Detailed comments are within each demo file.
+You can follow the following steps to run the program. 
+
+Detailed comments are within each demo file.
 
 Open `MATLAB` and type the following commands into the console:
 
