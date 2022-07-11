@@ -8,6 +8,7 @@ classdef A_2_echo_LinTrans < LinTrans
 		maps_conj	% conjungate of maps
 		mat_sz	% the size of the 2D echo images
 		sm_num	% single channel measurement per echo
+        wav_coef_len
 		echo_num	% the number of coils
 		coil_num	% the number of echoes
 		s_vect	% sampling vector
@@ -23,7 +24,7 @@ classdef A_2_echo_LinTrans < LinTrans
 	methods
 
 		% Constructor
-		function obj = A_2_echo_LinTrans(M,N,maps,mat_sz,sm_num,echo_num,coil_num,s_vect,Psit,Psi,A,Ah,S,St)
+		function obj = A_2_echo_LinTrans(M,N,maps,mat_sz,sm_num,wav_coef_len,echo_num,coil_num,s_vect,Psit,Psi,A,Ah,S,St)
 			obj = obj@LinTrans;
 
 			% manditory inputs
@@ -36,6 +37,7 @@ classdef A_2_echo_LinTrans < LinTrans
 			obj.maps_conj = conj(maps);
 			obj.mat_sz = mat_sz;
 			obj.sm_num = sm_num;
+            obj.wav_coef_len = wav_coef_len;
 			obj.echo_num = echo_num;
 			obj.coil_num = coil_num;
 			obj.s_vect = s_vect;
@@ -48,11 +50,11 @@ classdef A_2_echo_LinTrans < LinTrans
 			obj.A = A;
 
 			% optional inputs 
-			if nargin > 12
+			if nargin > 13
 				if isa(S,'double')&&(S>0)
 					% 11th input "S" contains FrobNorm
 					obj.FrobNorm = S;
-				elseif (nargin > 12)&&(isa(S,'function_handle')&isa(St,'function_handle'))
+				elseif (nargin > 13)&&(isa(S,'function_handle')&isa(St,'function_handle'))
 					% 13th and 14th inputs are both function handles, S and St
 					obj.S = S;
 					obj.St = St;
@@ -61,11 +63,11 @@ classdef A_2_echo_LinTrans < LinTrans
 				end
 			else
 				% approximate the squared Frobenius norm
-				P = 10;      % increase for a better approximation
+				P = 2;      % increase for a better approximation
 				obj.FrobNorm = 0;
 				for p=1:P,   % use "for" since A may not support matrices 
 				
-					x_tmp = randn([mat_sz(1)*mat_sz(2) echo_num]) + 1i * randn([mat_sz(1)*mat_sz(2) echo_num]);
+					x_tmp = randn([wav_coef_len echo_num]) + 1i * randn([wav_coef_len echo_num]);
 					norm_x_tmp = norm(x_tmp(:),'fro');
 					y_tmp = obj.mult(x_tmp);
 					obj.FrobNorm = obj.FrobNorm + (norm(y_tmp(:), 'fro')/norm_x_tmp).^2;
@@ -77,7 +79,7 @@ classdef A_2_echo_LinTrans < LinTrans
 				error('Dimension mismatch: M')
 			end
 			
-			if (N~=mat_sz(1)*mat_sz(2)*echo_num)
+			if (N~=wav_coef_len*echo_num)
 				error('Dimension mismatch: N')
 			end
 		end
@@ -121,7 +123,7 @@ classdef A_2_echo_LinTrans < LinTrans
 					x_tmp(:,:,j) = x_tmp(:,:,j) + obj.mat_sz(1)*obj.mat_sz(2)*obj.maps_conj(:,:,k).*obj.Ah(y(:,j,k), obj.s_vect(:,j));
 				end
 			end
-            x = zeros([obj.mat_sz(1)*obj.mat_sz(2) obj.echo_num]);
+            x = zeros([obj.wav_coef_len obj.echo_num]);
             for (j=1:obj.echo_num)
                 x(:,j) = obj.Psi(x_tmp(:,:,j));
             end
@@ -132,7 +134,8 @@ classdef A_2_echo_LinTrans < LinTrans
 			if isempty(obj.FrobNorm)
 				y = obj.S(x);
 			else
-				y = obj.echo_num*ones([obj.sm_num obj.echo_num obj.coil_num])*((obj.FrobNorm^2/(obj.M*obj.N))*sum(x,'all'));
+				%y = obj.echo_num*ones([obj.sm_num obj.echo_num obj.coil_num])*((obj.FrobNorm^2/(obj.M*obj.N))*sum(x,'all'));
+                y = obj.echo_num * (obj.FrobNorm^2/obj.M*x);
 			end
 		end
 
@@ -142,7 +145,8 @@ classdef A_2_echo_LinTrans < LinTrans
 			if isempty(obj.FrobNorm)
 				x = obj.St(y);
 			else
-				x = obj.echo_num*ones([obj.mat_sz(1)*obj.mat_sz(2) obj.echo_num])*((obj.FrobNorm^2/(obj.M*obj.N))*sum(y,'all'));
+				%x = obj.echo_num*ones([obj.wav_coef_len obj.echo_num])*((obj.FrobNorm^2/(obj.M*obj.N))*sum(y,'all'));
+                x = obj.echo_num * (obj.FrobNorm^2/obj.N*y);
 			end
 		end
 

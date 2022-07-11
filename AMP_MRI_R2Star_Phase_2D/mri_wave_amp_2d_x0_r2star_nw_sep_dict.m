@@ -1,30 +1,30 @@
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Step 1: Setting up parameters %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Setting up parameters %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % ESPIRiT parameters
     ncalib = 24;    % size of central k-space, use 24 calibration lines to estimate senstivity map, make sure to do full sampling in the AC region
 
     % dataset parameters
-    sy = 320;       % size along y-direction
-    sz = 208;       % size along z-direction
-    Nc = 32;        % the number of channels (coils)
+    sy = 204;       % size along y-direction
+    sz = 164;       % size along z-direction
+    Nc = 8;        % the number of channels (coils)
     Ne = 4;         % the number of echoes
-    echo_time = [7.32, 16, 24.7, 33.39].'; % echo time
+    echo_time = [4 12 20 28].'; % echo time in ms
 
     LN_num = 10;                        % computing thread
     LN = maxNumCompThreads( LN_num );   % set the largest number of computing threads
 
     % generate Poisson sampling pattern accroding to poisson disk
-    sampling_rate = 0.1;        % make sure to do full sampling in the AC region
+    sampling_rate = 0.15;        % make sure to do full sampling in the AC region
     sampling_pd_interval = 2;   % the minimum distance between any two locations, needs   to be tuned for best performance
     num_samples = round(sy*sz*sampling_rate);   % the number of samples
 
     % for this dataset, sx direction is fully sampled, undersampling takes place in sy-sz plane
     % full_sampling_loc should be a mask of size sy by sz, the mask contains 0-1 values 
-    load('../data/full_sampling_loc.mat');
+    load('../data/Sim1/full_sampling_loc_204_164.mat');
 
-    output_file = '../result/gamp_rec_2d';     % the prefix for the 2d output 
+    output_file = '../result/Sim1_gamp_rec_2d';     % the prefix for the 2d output 
 
     % wavelet transform paramters
     nlevel = 4;     % wavelet transform level, usually 3-4 is enough
@@ -38,9 +38,9 @@
     % gamp parameters
     cvg_thd = 1e-6;     % convergence threshold
     kappa = 1;          % damping rate for parameter estimation
-    x_mag_max = 1;      % maximum value of magnitude image
+    x_mag_max = 500;    % maximum value of magnitude image ** needs to be updated accordingly **
     x_mag_min = eps;    % minimum value of magnitude image
-    x0_max = 1;         % maximum value of the initial magnetization
+    x0_max = 500;       % maximum value of the initial magnetization ** needs to be updated accordingly **
     x0_min = eps;       % minimum value of the initial magnetization
     r2star_max = 0.25;  % maixmum value of r2star value
     r2star_min = 0;     % minimum value of r2star value
@@ -49,15 +49,28 @@
     tau_w_2 = 1e-12;    % the initial noise variance for the r2star estimation
 
     damp_rate = [];     % the damping rate of AMP iterations (like the step size), it is a number between 0 and 1, 
-    if (sampling_rate<=0.1)
-        damp_rate = 0.5;    % when the sampling rate is low, use a smaller damping rate
-    else 
-        damp_rate = 1;      % when the sampling rate is high, use a larger dampling rate, "1" means no dampling at all
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% generally, if there are fewer measurements either due to a smaller sampling rate or a smaller number of channels (sensitivity coils), the damp rate need to be smaller to ensure AMP-PE to converge
+    %% for your own dataset, you might need to tune the damp_rate and/or kappa
+    %% on the other hand, if the damp_rate and kappa is small, you will need more number of iterations to reach a good reconstruciton
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if (sampling_rate == 0.1)
+        damp_rate = 0.5;    % when the sampling rate is low, use a smaller damping rate for the signal
+        kappa = 1;           % damping rate for the parameter estimation, you can also try to make it smaller
+    end
+    if (sampling_rate == 0.15)
+        damp_rate = 0.5;    % when the sampling rate is low, use a smaller damping rate for the signal
+        kappa = 1;          % damping rate for the parameter estimation, you can also try to make it smaller
+    end
+    if (sampling_rate == 0.2)
+        damp_rate = 1;      % when the sampling rate is high, use a larger dampling rate for the signal, "1" means no dampling at all
+        kappa = 1;          % damping rate for the parameter estimation
     end
 
     % AMP is more computationally efficient, it converges faster than L1 and thus requires less iterations
-    max_pe_spar_ite = 50;  % the number of iterations used by AMP to compute multi-echo image prior
-    max_pe_ite = 50;       % the number of iterations used by AMP to recover initial magnetization, T2star/R2star map and phase images
+    % for better performance when the damp_rate is small, you could try to increase the number of iterations: max_pe_spar_ite and max_pe_ite. You could also try to increase max_pe_est_ite
+    max_pe_spar_ite = 100;  % the number of iterations used by AMP to compute multi-echo image prior
+    max_pe_ite = 100;       % the number of iterations used by AMP to recover initial magnetization, T2star/R2star map and phase images
     max_pe_est_ite = 5;    % the number of inner iterations to estimate paramters
 
     % create dictionary for estimation of r2star
@@ -69,9 +82,9 @@
     exp_dict_sq_norm = sum(exp_dict.^2,1);
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Step 2: generate Poisson-disk pattern %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % generate Poisson-disk pattern
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     loc_index = reshape(1:(sy*sz), [sy sz]);    % sampling location indices
 
@@ -116,14 +129,13 @@
         sampling_vect(:,echo_idx) = sort(sampling_loc);
     end 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Step 2.1: read data into noisy_measure %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% read data into noisy_measure %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 
     noisy_measure = zeros(num_samples, Ne, Nc);
 
-    load(strcat('../data/slice_2d.mat'))
-    %data = permute(data,[1 2 4 3]);
+    load(strcat('../data/Sim1/slice_2d.mat'))
     for (i=1:Ne)
         for (j=1:Nc)
             data_tmp = squeeze(data(:,:,i,j));
@@ -134,7 +146,7 @@
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% read the sensitivity 3D maps estiamted via espirit %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    load('../data/sensitivity_map_2d.mat')  % get maps
+    load('../data/Sim1/sensitivity_map_2d.mat')  % get maps
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -190,10 +202,9 @@
     end
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Step 3: use conjungate gradient descent to find %%
-    %% the least squares solution with minimum l2 norm %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% use conjungate gradient descent to find the least square solution with minimum l2 norm %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     y_echo = noisy_measure;
     clear noisy_measure;
@@ -279,10 +290,9 @@
     wav_coef_len = length(H_exp_psi);
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Step 4: gamp reconstruction %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       
+    %%%%%%%%%%%%%%%%%%%%%%%
+    % gamp reconstruction
+    %%%%%%%%%%%%%%%%%%%%%%%    
     % initialize the gamp parameters
     gamp_par.damp_rate = damp_rate;
     gamp_par.max_pe_ite = max_pe_ite;
@@ -341,7 +351,7 @@
 
     M=num_samples*Ne*Nc;
     N=wav_coef_len*Ne;
-    A_2_echo = A_2_echo_LinTrans(M,N,maps,mat_sz,num_samples,Ne,Nc,sampling_vect,Psit,Psi,hS,hSt);
+    A_2_echo = A_2_echo_LinTrans(M,N,maps,mat_sz,num_samples,wav_coef_len,Ne,Nc,sampling_vect,Psit,Psi,hS,hSt);
 
     M=num_samples*Ne*Nc;
     N=sy*sz*Ne;
@@ -365,7 +375,7 @@
     output_par.tau_w_1 = output_par_new.tau_w_1;
 
     clear res;
-    clear A_2_echo_3d;
+    clear A_2_echo;
 
     M=sy*sz*Ne;
     N=wav_coef_len;
@@ -402,14 +412,11 @@
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % note that depending on the dataset, ifftshift or fftshift might be needed
-    x0_rec = ifftshift(Psit(res.x0_psi));   % recovered initial magnetization
-    r2star_rec = ifftshift(res.r2star);     % recovered R2star map
+    x0_rec = Psit(res.x0_psi);   % recovered initial magnetization
+    r2star_rec = res.r2star;     % recovered R2star map
     x_hat_rec = res.x_hat_all;              % recovered multi-echo images
-    for (i=1:Ne)
-        x_hat_rec(:,:,i) = ifftshift(x_hat_rec(:,:,i));
-    end
 
     % note that the display range needs to be set properly
-    figure; imshow(x0_rec,[0,0.015])
-    figure; imshow(r2star_rec,[0,0.05])
-    figure; imshow(real(x_hat_rec(:,:,1)),[-0.015,0.015])
+    figure; imshow(x0_rec,[0,200])
+    figure; imshow(r2star_rec,[0,0.1])
+    figure; imshow(real(x_hat_rec(:,:,1)),[-200,200])

@@ -55,6 +55,7 @@ function [H_exp, V, fun_val_block_1_cur_0, fun_val_block_1_cur_1]=exponential_fi
 
     fun_val_block_1_cur = 0;
     cvg_count_block_1 = 0;
+    cvg_count_block_2 = 0;
     for (ii=1:maxiter)
 
         for (jj=1:maxinneriter)
@@ -130,6 +131,14 @@ function [H_exp, V, fun_val_block_1_cur_0, fun_val_block_1_cur_1]=exponential_fi
         Stp1_V = V;
         cvg_val_block_V_2 = sqrt(sum(abs(Stp1_V - St_V).^2, 'all'))/sqrt(sum(abs(Stp1_V).^2, 'all'));
         fprintf('V opt: %d  %d\n', ii, cvg_val_block_V_2);
+
+	if (cvg_val_block_V_2<tol)
+	    cvg_count_block_2 = cvg_count_block_2 + 1;
+	end
+
+	if (cvg_count_block_2>10)
+	    break;
+	end
 
         St_V = Stp1_V;
 

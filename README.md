@@ -6,7 +6,8 @@ A nonlinear approximate message passing (AMP) framework is proposed to recover R
 @ARTICLE{Bayesian_R2Star_2022,
     author={Shuai Huang and James J. Lah and Jason W. Allen and Deqiang Qiu},
     journal={Magnetic Resonance in Medicine},
-    title={A Probabilistic Bayesian Approach to Recover R2* map and Phase Images for QSM},
+    title={A Probabilistic Bayesian Approach to Recover R2* map and Phase Images for Quantitative Susceptibility Mapping},
+    pages={1-19},
     year={2022},
 }
 ```
@@ -19,7 +20,7 @@ A nonlinear approximate message passing (AMP) framework is proposed to recover R
     ./AMP_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the AMP-PE approach.
     ./L1_MRI_T2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the l1-norm regularization (L1) approach.
     ./L1_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the l1-norm regularization (L1) approach.
-    ./data			-- The data folder
+    ./data			-- The data folder contains simulated data "Sim1" derived from the 2019 QSM challenge 2.0
     ./result			-- The result folder
 ```
 
@@ -54,7 +55,13 @@ You can follow the following steps to run the program.
 
 Open `MATLAB` and type the following commands into the console:
 
-* Step 1) Reconstruction using the AMP-PE approach.
+* Step 0) Generate simulated measurements based on the Sim1 dataset from the 2019 QSM challenge 2.0
+```
+    >> cd ./data/Sim1
+    >> Sim1_generate_measurements
+```
+
+* Step 1) Reconstruction using the AMP-PE approach. The parameters are adaptively and automatically estimated from the data.
 ```
     >> cd ./AMP_MRI_T2Star_Phase_3D	% perform 3D reconstruction
     >> addpath('.')
@@ -64,7 +71,7 @@ Open `MATLAB` and type the following commands into the console:
     >> addpath('.')
     >> mri_wave_amp_2d_x0_r2star_nw_sep_dict	% this is the demo file, look inside for detail comments
 ```
-* Step 2) Reconstruction using the L1 approach
+* Step 2) Reconstruction using the L1 approach. The regularization parameters need to be `tuned manually` for different types of datasets.
 ```
     >> cd ./L1_MRI_T2Star_Phase_3D	% perform 3D reconstruction
     >> addpath('.')
