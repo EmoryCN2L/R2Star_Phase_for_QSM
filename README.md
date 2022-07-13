@@ -16,10 +16,10 @@ A nonlinear approximate message passing (AMP) framework is proposed to recover R
 
 ## Summary
 ```
-    ./AMP_MRI_T2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the AMP-PE approach.
-    ./AMP_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the AMP-PE approach.
-    ./L1_MRI_T2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the l1-norm regularization (L1) approach.
-    ./L1_MRI_T2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the l1-norm regularization (L1) approach.
+    ./AMP_MRI_R2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the AMP-PE approach.
+    ./AMP_MRI_R2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the AMP-PE approach.
+    ./L1_MRI_R2Star_Phase_3D	-- This folder contains MATLAB files to perform 3D reconstruction using the l1-norm regularization (L1) approach.
+    ./L1_MRI_R2Star_Phase_2D	-- This folder contains MATLAB files to perform 2D reconstruction using the l1-norm regularization (L1) approach.
     ./data			-- The data folder contains simulated data "Sim1" derived from the 2019 QSM challenge 2.0
     ./result			-- The result folder
 ```
@@ -55,39 +55,36 @@ You can follow the following steps to run the program.
 
 Open `MATLAB` and type the following commands into the console:
 
-* Step 0) Generate simulated measurements based on the Sim1 dataset from the 2019 QSM challenge 2.0
-```
-    >> cd ./data/Sim1
-    >> Sim1_generate_measurements
-```
+* Step 0) Prepare the 2D or 3D dataset in the correct format detailed above. Due to size limit, only a 2D dataset generated from the Sim1 dataset from the 2019 QSM challenge 2.0 is provided in the data folder. It should be easy to organize your own dataset in a similzr format. For 3D dataset, please note that the undersampling takes place in the phase encoding sy and sz directions, the readout sx direction is always fully sampled.
 
-* Step 1) Reconstruction using the AMP-PE approach. The parameters are adaptively and automatically estimated from the data.
+
+* Step 1) Reconstruction using the AMP-PE approach. The parameters are adaptively and automatically estimated from the dataset.
 ```
-    >> cd ./AMP_MRI_T2Star_Phase_3D	% perform 3D reconstruction
-    >> addpath('.')
-    >> mri_wave_amp_3d_x0_r2star_nw_sep_dict	% this is the demo file, look inside for detail comments
-    >>
-    >> cd ../AMP_MRI_T2Star_Phase_2D	% perform 2D reconstruction
+    >> cd ./AMP_MRI_R2Star_Phase_2D	% perform 2D reconstruction
     >> addpath('.')
     >> mri_wave_amp_2d_x0_r2star_nw_sep_dict	% this is the demo file, look inside for detail comments
-```
-* Step 2) Reconstruction using the L1 approach. The regularization parameters need to be `tuned manually` for different types of datasets.
-```
-    >> cd ./L1_MRI_T2Star_Phase_3D	% perform 3D reconstruction
-    >> addpath('.')
-    >> mri_rec_wave_l1_reg_3d	% this is the demo file, look inside for detail comments
     >>
-    >> cd ../L1_MRI_T2Star_Phase_2D	% perform 2D reconstruction
+    >> cd ../AMP_MRI_R2Star_Phase_3D	% perform 3D reconstruction
+    >> addpath('.')
+    >> mri_wave_amp_3d_x0_r2star_nw_sep_dict	% this is the demo file, look inside for detail comments
+```
+* Step 2) Reconstruction using the L1 approach. It requires manual parametere tuning for different types of datasets.
+```
+    >> cd ./L1_MRI_R2Star_Phase_2D	% perform 2D reconstruction
     >> addpath('.')
     >> mri_rec_wave_l1_reg_2d	% this is the demo file, look inside for detail comments
+    >>
+    >> cd ../L1_MRI_R2Star_Phase_3D	% perform 3D reconstruction
+    >> addpath('.')
+    >> mri_rec_wave_l1_reg_3d	% this is the demo file, look inside for detail comments
 ```
 * Step 3) Reconstruction using the least square approach
 ```
-    >> cd ./L1_MRI_T2Star_Phase_3D	% perform 3D reconstruction
-    >> addpath('.')
-    >> mri_rec_wave_lsq_3d	% this is the demo file, look inside for detail comments
-    >>
-    >> cd ../L1_MRI_T2Star_Phase_2D	% perform 2D reconstruction
+    >> cd ./L1_MRI_R2Star_Phase_2D	% perform 2D reconstruction
     >> addpath('.')
     >> mri_rec_wave_lsq_2d	% this is the demo file, look inside for detail comments
+    >>
+    >> cd ../L1_MRI_R2Star_Phase_3D	% perform 3D reconstruction
+    >> addpath('.')
+    >> mri_rec_wave_lsq_3d	% this is the demo file, look inside for detail comments
 ```

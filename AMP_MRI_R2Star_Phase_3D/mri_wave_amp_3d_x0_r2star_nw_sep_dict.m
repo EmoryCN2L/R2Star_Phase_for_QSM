@@ -9,7 +9,7 @@
     sx = 204;       % size along x-direction
     sy = 204;       % size along y-direction
     sz = 164;       % size along z-direction
-    Nc = 8;        % the number of channels (coils)
+    Nc = 16;        % the number of channels (coils)
     Ne = 4;         % the number of echoes
     echo_time = [4 12 20 28].'; % echo time in ms
 
@@ -24,6 +24,7 @@
     % for this dataset, sx direction is fully sampled, undersampling takes place in sy-sz plane
     % full_sampling_loc should be a mask of size sy by sz, the mask contains 0-1 values 
     load('../data/Sim1/full_sampling_loc_204_164.mat');
+    load('../data/Sim1/mask_3d.mat')    % mask for the brain region
     
     output_file = '../result/Sim1_gamp_rec_3d';     % the prefix for the 3d output 
 
@@ -356,11 +357,7 @@
     gamp_par.s_hat_meas_2 = zeros(size(y_echo));
 
     % initialize the distribution parameters
-    lambda_x_hat_psi = [];
-    for (i = 1:Ne)
-        x_hat_psi_tmp = x_hat_meas_psi(:,i);
-        lambda_x_hat_psi = [lambda_x_hat_psi; 1/sqrt(var(abs(x_hat_psi_tmp))/2)];
-    end
+    lambda_x_hat_psi = 1/sqrt(var(abs(x_hat_meas_psi(:)))/2);
     input_par.lambda_x_hat_psi = lambda_x_hat_psi;
 
     input_par.lambda_x0_psi = 1/sqrt(var(H_exp_psi)/2);
@@ -449,6 +446,11 @@
     x0_rec = Psit(C_struct(res.x0_psi));    % recovered initial magnetization
     r2star_rec = res.r2star;                % recovered R2star map
     x_hat_rec = res.x_hat_all;              % recovered multi-echo images
+
+    % extract the brain with a brain mask    
+    x0_rec(mask_3d==0) = 0;
+    r2star_rec(mask_3d==0) = 0;
+    x_hat_rec(mask_3d==0) = 0;
 
     % note that the display range needs to be set properly
     figure; imshow3D(x0_rec,[0,200])

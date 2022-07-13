@@ -60,16 +60,12 @@ function [res, input_par, output_par] = gamp_mri_multi_echo_2d_nw(A_2_echo, y, g
             r_hat_meas_1 = x_hat_meas_psi + tau_r_meas_1 * A_2_echo.multTr(s_hat_meas_1);
 
             % parameter estimation
-            for (ite_pe_est = 1:max_pe_est_ite)
-                for (i=1:size(r_hat_meas_1,2))
-                    lambda_x_hat_psi(i) = input_parameter_est(abs(r_hat_meas_1(:,i)), tau_r_meas_1, lambda_x_hat_psi(i), kappa);
-                end
-            end
+            lambda_x_hat_psi = input_parameter_est(abs(r_hat_meas_1(:)), tau_r_meas_1, lambda_x_hat_psi, kappa);
 
             x_hat_meas_psi_pre = x_hat_meas_psi;
             tau_x_meas_psi_tmp = zeros(size(r_hat_meas_1,2),1);
             for (i=1:size(r_hat_meas_1,2))
-                [x_hat_meas_psi(:,i), tau_x_meas_psi_tmp(i)] = input_function(r_hat_meas_1(:,i), tau_r_meas_1, lambda_x_hat_psi(i));
+                [x_hat_meas_psi(:,i), tau_x_meas_psi_tmp(i)] = input_function(r_hat_meas_1(:,i), tau_r_meas_1, lambda_x_hat_psi);
             end
             tau_x_meas_psi = mean(tau_x_meas_psi_tmp);
             x_hat_meas_psi = x_hat_meas_psi_pre + damp_rate*(x_hat_meas_psi-x_hat_meas_psi_pre);
