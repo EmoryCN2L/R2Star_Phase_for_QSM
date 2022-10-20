@@ -7,7 +7,9 @@ A nonlinear approximate message passing (AMP) framework is proposed to recover R
     author={Shuai Huang and James J. Lah and Jason W. Allen and Deqiang Qiu},
     journal={Magnetic Resonance in Medicine},
     title={A Probabilistic Bayesian Approach to Recover R2* map and Phase Images for Quantitative Susceptibility Mapping},
-    pages={1-19},
+    volume={88},
+    number={4},
+    pages={1624-1642},
     year={2022},
 }
 ```
